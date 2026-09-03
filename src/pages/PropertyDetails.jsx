@@ -4,6 +4,7 @@ import { useProperties } from '../context/PropertyContext';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import { WHATSAPP_NUMBER } from '../App';
+import { safeUrl } from '../utils/safeUrl';
 
 const mapIcon = new L.DivIcon({
   className: 'custom-map-marker',
@@ -26,6 +27,12 @@ export default function PropertyDetails() {
 
   // Spec rows come from the individual dashboard fields. Blank ones are dropped
   // so older listings that predate these columns render exactly as before.
+  // These three come straight from dashboard text inputs, so scrub anything
+  // that is not a plain http(s) link before it is used as an href.
+  const mapsUrl = safeUrl(property?.maps_url);
+  const fbUrl = safeUrl(property?.fb_url);
+  const instaUrl = safeUrl(property?.insta_url);
+
   const specs = [
     { label: 'Site No', value: property?.site_no },
     { label: 'Dimension', value: property?.size },
@@ -33,7 +40,7 @@ export default function PropertyDetails() {
     { label: 'Location', value: property?.location_text },
     { label: 'Price', value: property?.price },
     { label: 'Contact', value: property?.contact, href: property?.contact ? `tel:${property.contact}` : null },
-    { label: 'Google Location', value: property?.maps_url ? 'View on Google Maps' : '', href: property?.maps_url }
+    { label: 'Google Location', value: mapsUrl ? 'View on Google Maps' : '', href: mapsUrl }
   ].filter(s => s.value);
 
   // Lightbox can show either the gallery or the document images.
@@ -150,7 +157,7 @@ export default function PropertyDetails() {
             Chat on WhatsApp
           </a>
           <a
-            href={property.maps_url || `https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`}
+            href={mapsUrl || `https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`}
             target="_blank"
             rel="noreferrer"
             className="button pd-contact"
@@ -167,16 +174,16 @@ export default function PropertyDetails() {
             Share this property
           </button>
 
-          {(property.fb_url || property.insta_url) && (
+          {(fbUrl || instaUrl) && (
             <div className="pd-social">
-              {property.fb_url && (
-                <a href={property.fb_url} target="_blank" rel="noreferrer" className="pd-social-link" aria-label="Facebook">
+              {fbUrl && (
+                <a href={fbUrl} target="_blank" rel="noreferrer" className="pd-social-link" aria-label="Facebook">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z" /></svg>
                   Facebook
                 </a>
               )}
-              {property.insta_url && (
-                <a href={property.insta_url} target="_blank" rel="noreferrer" className="pd-social-link" aria-label="Instagram">
+              {instaUrl && (
+                <a href={instaUrl} target="_blank" rel="noreferrer" className="pd-social-link" aria-label="Instagram">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zm0 3.24a6.6 6.6 0 1 0 0 13.2 6.6 6.6 0 0 0 0-13.2zm0 10.88a4.28 4.28 0 1 1 0-8.56 4.28 4.28 0 0 1 0 8.56zm6.85-11.13a1.54 1.54 0 1 1-3.08 0 1.54 1.54 0 0 1 3.08 0z" /></svg>
                   Instagram
                 </a>

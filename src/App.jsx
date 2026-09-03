@@ -7,6 +7,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 import { useProperties } from './context/PropertyContext'
+import { safeUrl } from './utils/safeUrl'
 import { supabase } from './supabaseClient'
 import Dashboard, { PROPERTY_TYPES } from './pages/Dashboard'
 import PropertyDetails from './pages/PropertyDetails'
@@ -328,7 +329,7 @@ function PropertyExplorer() {
                 </a>
                 <div className="property-meta"><span>{p.type}</span> &nbsp;|&nbsp; <span>{p.size}</span></div>
                 <div className="property-price">{p.price}</div>
-                <a href={p.maps_url || `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`} target="_blank" rel="noreferrer" className="link-flash" style={{fontSize: '14px', marginTop: '10px', display: 'inline-block'}}>Open in Google Maps</a>
+                <a href={safeUrl(p.maps_url) || `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`} target="_blank" rel="noreferrer" className="link-flash" style={{fontSize: '14px', marginTop: '10px', display: 'inline-block'}}>Open in Google Maps</a>
               </div>
             </div>
           ))}

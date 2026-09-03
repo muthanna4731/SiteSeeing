@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useProperties } from '../context/PropertyContext';
 import { supabase } from '../supabaseClient';
+import { isSafeUrl } from '../utils/safeUrl';
 
 // Property types. "Site" replaces the old "Plot" label.
 export const PROPERTY_TYPES = ['Site', 'Villa', 'Apartment', 'Agricultural Land', 'Farmland', 'Rent'];
@@ -94,6 +95,20 @@ export default function Dashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Reject anything that is not a plain http(s) link so a bad scheme never
+    // reaches the database and, from there, a visitor's browser.
+    const linkFields = [
+      ['Facebook URL', form.fb_url],
+      ['Instagram URL', form.insta_url],
+      ['Google Maps URL', form.maps_url]
+    ];
+    const badLink = linkFields.find(([, value]) => value.trim() && !isSafeUrl(value.trim()));
+    if (badLink) {
+      alert(`${badLink[0]} must be a full http:// or https:// link.`);
+      return;
+    }
+
     setUploading(true);
     try {
       let imageUrl = form.image;
