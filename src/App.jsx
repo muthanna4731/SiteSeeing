@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, Fragment } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo, Fragment } from 'react'
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -8,6 +8,7 @@ import 'leaflet/dist/leaflet.css'
 
 import { useProperties } from './context/PropertyContext'
 import { safeUrl } from './utils/safeUrl'
+import { withLatLng } from './utils/coords'
 import { supabase } from './supabaseClient'
 import Dashboard, { PROPERTY_TYPES } from './pages/Dashboard'
 import PropertyDetails from './pages/PropertyDetails'
@@ -250,6 +251,9 @@ function PropertyExplorer() {
     (filter === 'All' || normalizeType(p.type) === filter) &&
     (cityFilter === 'All' || p.city === cityFilter)
   )
+  // Only rows with usable coordinates reach the map, and the array identity is
+  // kept stable so FitBounds doesn't refit on every render.
+  const mappable = useMemo(() => withLatLng(filtered), [filtered])
 
   const openProperty = (e, id) => {
     e.preventDefault()
@@ -297,11 +301,10 @@ function PropertyExplorer() {
 
       <div className="map-wrap">
         <MapContainer center={[12.2958, 76.6394]} zoom={12} scrollWheelZoom={false} className="leaflet-map">
-          <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}" attribution="Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ" maxZoom={20} maxNativeZoom={16} />
-          <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}" maxZoom={20} maxNativeZoom={16} />
-          <FitBounds points={filtered.filter(p => p.lat != null && p.lng != null).map(p => [p.lat, p.lng])} />
-          {filtered.map(p => (
-            <Marker key={p.id} position={[p.lat, p.lng]} icon={priceIcon(p.price)}>
+          <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}" attribution="Tiles &copy; Esri &mdash; Esri, HERE, Garmin, OpenStreetMap contributors" maxZoom={19} />
+          <FitBounds points={mappable.map(m => m.position)} />
+          {mappable.map(({ property: p, position }) => (
+            <Marker key={p.id} position={position} icon={priceIcon(p.price)}>
               <Popup className="airbnb-popup">
                 <div className="map-popup" onClick={() => openProperty({ preventDefault() {}, currentTarget: null }, p.id)} style={{ cursor: 'pointer' }}>
                   <img src={p.image} alt={p.title} />

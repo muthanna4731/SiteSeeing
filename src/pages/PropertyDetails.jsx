@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import { WHATSAPP_NUMBER } from '../App';
 import { safeUrl } from '../utils/safeUrl';
+import { toLatLng } from '../utils/coords';
 
 const mapIcon = new L.DivIcon({
   className: 'custom-map-marker',
@@ -27,6 +28,10 @@ export default function PropertyDetails() {
 
   // Spec rows come from the individual dashboard fields. Blank ones are dropped
   // so older listings that predate these columns render exactly as before.
+  // null when the row's coordinates are unusable — the map is dropped rather
+  // than rendered at a wrong location.
+  const position = toLatLng(property);
+
   // These three come straight from dashboard text inputs, so scrub anything
   // that is not a plain http(s) link before it is used as an href.
   const mapsUrl = safeUrl(property?.maps_url);
@@ -140,14 +145,17 @@ export default function PropertyDetails() {
         </div>
 
         <div className="pd-col pd-sidebar">
-          <h3>Location</h3>
-          <div className="pd-map">
-            <MapContainer center={[property.lat, property.lng]} zoom={14} scrollWheelZoom={false} style={{ width: '100%', height: '100%' }}>
-              <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}" attribution="Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ" maxZoom={20} maxNativeZoom={16} />
-              <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}" maxZoom={20} maxNativeZoom={16} />
-              <Marker position={[property.lat, property.lng]} icon={mapIcon} />
-            </MapContainer>
-          </div>
+          {position && (
+            <>
+              <h3>Location</h3>
+              <div className="pd-map">
+                <MapContainer center={position} zoom={14} scrollWheelZoom={false} style={{ width: '100%', height: '100%' }}>
+                  <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}" attribution="Tiles &copy; Esri &mdash; Esri, HERE, Garmin, OpenStreetMap contributors" maxZoom={19} />
+                  <Marker position={position} icon={mapIcon} />
+                </MapContainer>
+              </div>
+            </>
+          )}
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi, I'm interested in "${property.title}". ${window.location.href}`)}`}
             target="_blank"
@@ -158,7 +166,7 @@ export default function PropertyDetails() {
             Chat on WhatsApp
           </a>
           <a
-            href={mapsUrl || `https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`}
+            href={mapsUrl || (position ? `https://www.google.com/maps/search/?api=1&query=${position[0]},${position[1]}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.title} ${property.city || ''}`.trim())}`)}
             target="_blank"
             rel="noreferrer"
             className="button pd-contact"
