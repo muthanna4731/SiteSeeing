@@ -297,7 +297,8 @@ function PropertyExplorer() {
 
       <div className="map-wrap">
         <MapContainer center={[12.2958, 76.6394]} zoom={12} scrollWheelZoom={false} className="leaflet-map">
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap contributors &copy; CARTO" subdomains="abcd" maxZoom={20} />
+          <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}" attribution="Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ" maxZoom={20} maxNativeZoom={16} />
+          <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}" maxZoom={20} maxNativeZoom={16} />
           <FitBounds points={filtered.filter(p => p.lat != null && p.lng != null).map(p => [p.lat, p.lng])} />
           {filtered.map(p => (
             <Marker key={p.id} position={[p.lat, p.lng]} icon={priceIcon(p.price)}>
